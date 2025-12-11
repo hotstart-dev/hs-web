@@ -37,8 +37,14 @@ export default function LoginPage() {
 		try {
 			const response = await authApi.login(email, password);
 			setSuccess(response.message);
-			// Future: Store session token and redirect to dashboard
-			// For now, just show success message
+			
+			// Store user data in localStorage
+			localStorage.setItem('user', JSON.stringify(response.user));
+			
+			// Redirect to dashboard after a brief delay
+			setTimeout(() => {
+				window.location.href = '/dashboard';
+			}, 1000);
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setError(err.message);
