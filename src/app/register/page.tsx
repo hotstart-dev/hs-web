@@ -47,10 +47,15 @@ export default function RegisterPage() {
 
 		try {
 			const response = await authApi.register(email, password);
-			setSuccess(response.message);
-			setEmail('');
-			setPassword('');
-			setConfirmPassword('');
+			setSuccess('Account created! Signing you in...');
+			
+			// Store user data in localStorage (auto-login)
+			localStorage.setItem('user', JSON.stringify(response.user));
+			
+			// Redirect to dashboard
+			setTimeout(() => {
+				window.location.href = '/dashboard';
+			}, 1000);
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setError(err.message);
