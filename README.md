@@ -1,63 +1,92 @@
-# Next.js Framework Starter
+# Hotstart Web
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/next-starter-template)
+The Next.js frontend for Hotstart, deployed on Cloudflare Workers.
 
-<!-- dash-content-start -->
+## Architecture
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app). It's deployed on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+All backend requests go through the centralized API Gateway:
 
-This template uses [OpenNext](https://opennext.js.org/) via the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare), which works by taking the Next.js build output and transforming it, so that it can run in Cloudflare Workers.
-
-<!-- dash-content-end -->
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
-
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/next-starter-template
+```
+https://api.hotstart.dev
 ```
 
-A live public deployment of this template is available at [https://next-starter-template.templates.workers.dev](https://next-starter-template.templates.workers.dev)
+The gateway routes to individual services:
+- `/auth/*` → Auth service (login, register, sessions)
+- `/blueprint/*` → Blueprint service (project templates)
+- `/ui/*` → UI service
+- `/billing/*` → Billing service
+
+**⚠️ Never call worker URLs directly. All requests must go through the gateway.**
 
 ## Getting Started
 
-First, run:
+### 1. Install Dependencies
 
 ```bash
 npm install
-# or
-yarn install
-# or
-pnpm install
-# or
-bun install
 ```
 
-Then run the development server (using the package manager of your choice):
+### 2. Configure Environment
+
+Copy the example environment file:
+
+```bash
+cp env.example .env.local
+```
+
+For local development, the default config points to `http://localhost:8787`.
+
+For production, set:
+```
+NEXT_PUBLIC_API_URL=https://api.hotstart.dev
+```
+
+### 3. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Command | Action |
+|:--------|:-------|
+| `npm run build` | Build production site |
+| `npm run preview` | Preview build locally |
+| `npm run deploy` | Deploy to Cloudflare |
 
-## Deploying To Production
+## Project Structure
 
-| Command                           | Action                                       |
-| :-------------------------------- | :------------------------------------------- |
-| `npm run build`                   | Build your production site                   |
-| `npm run preview`                 | Preview your build locally, before deploying |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare    |
-| `npm wrangler tail`               | View real-time logs for all Workers          |
+```
+src/
+├── app/
+│   ├── dashboard/     # Protected dashboard page
+│   ├── login/         # Login page
+│   ├── register/      # Registration page
+│   └── page.tsx       # Landing page
+└── lib/
+    └── api.ts         # API Gateway client with service modules
+```
 
-## Learn More
+## API Services
 
-To learn more about Next.js, take a look at the following resources:
+The `src/lib/api.ts` file provides typed clients for all services:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```typescript
+import { authApi, blueprintApi, billingApi } from '@/lib/api';
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+// Auth
+await authApi.login(email, password);
+await authApi.register(email, password);
+await authApi.logout();
+
+// Blueprints
+await blueprintApi.list();
+await blueprintApi.create({ name, config });
+
+// Billing
+await billingApi.getPlans();
+await billingApi.createCheckout(planId);
+```

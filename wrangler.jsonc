@@ -13,7 +13,7 @@
 		"directory": ".open-next/assets"
 	},
 	"vars": {
-		"NEXT_PUBLIC_API_URL": "https://hs-web-api.milannair99.workers.dev"
+		"NEXT_PUBLIC_API_URL": "https://api.hotstart.dev"
 	},
 	"observability": {
 		"enabled": true
