@@ -124,7 +124,7 @@ export const api = {
 // ============================================
 
 export interface AuthUser {
-	id: number;
+	id: string;  // UUID
 	email: string;
 }
 

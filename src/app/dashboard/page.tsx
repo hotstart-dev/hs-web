@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface User {
-	id: number;
+	id: string;  // UUID
 	email: string;
 }
 
