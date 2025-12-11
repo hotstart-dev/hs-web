@@ -3,7 +3,25 @@
  * Handles all communication with the backend Worker
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+// Production API URL - used when NEXT_PUBLIC_API_URL is not set at build time
+const PRODUCTION_API_URL = 'https://hs-web-api.milannair99.workers.dev';
+
+function getApiBaseUrl(): string {
+	// Check for explicit env var first (set at build time)
+	if (process.env.NEXT_PUBLIC_API_URL) {
+		return process.env.NEXT_PUBLIC_API_URL;
+	}
+	
+	// In browser on production domain, use production API
+	if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+		return PRODUCTION_API_URL;
+	}
+	
+	// Default to localhost for development
+	return 'http://localhost:8787';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Custom error class for API errors
