@@ -405,3 +405,107 @@ export const billingApi = {
 	cancelSubscription: () =>
 		api.post<{ success: boolean }>('/billing/cancel', {}),
 };
+
+// ============================================
+// DISTRIBUTION SERVICE - /distribution/*
+// ============================================
+// Public routes for app downloads and update checking
+
+export interface ReleaseInfo {
+	platform: string;
+	displayName: string;
+	version: string;
+	filename: string;
+	size: number;
+	sizeFormatted: string;
+	lastModified: string | null;
+	downloadUrl: string;
+}
+
+export interface UpdateCheckResponse {
+	updateAvailable: boolean;
+	currentVersion: string | null;
+	latestVersion: string;
+	mandatory: boolean;
+	downloadUrl: string;
+	releaseNotes: string;
+	size: number;
+	sizeFormatted: string;
+	releaseDate: string;
+}
+
+export interface LatestVersionResponse {
+	version: string;
+	releaseDate: string;
+	notes: string;
+	mandatory: boolean;
+	platforms: Array<{
+		id: string;
+		name: string;
+		downloadUrl: string;
+	}>;
+}
+
+/**
+ * Distribution Service API (Public)
+ * All routes proxied through gateway: /distribution/*
+ * Handles app downloads and update checking
+ */
+export const distributionApi = {
+	/**
+	 * List all available releases
+	 * GET /distribution/releases
+	 */
+	getReleases: () =>
+		api.get<{ success: boolean; version: string; releaseDate: string; releases: ReleaseInfo[] }>(
+			'/distribution/releases'
+		),
+
+	/**
+	 * Get download info for a platform
+	 * GET /distribution/app/:platform/info
+	 */
+	getDownloadInfo: (platform: string) =>
+		api.get<{
+			available: boolean;
+			platform: string;
+			displayName: string;
+			filename: string;
+			size: number;
+			sizeFormatted: string;
+			version: string;
+			downloadUrl: string;
+		}>(`/distribution/app/${platform}/info`),
+
+	/**
+	 * Get download URL for a platform
+	 * Returns the full URL for direct download
+	 */
+	getDownloadUrl: (platform: string): string =>
+		`${process.env.NEXT_PUBLIC_API_URL || 'https://api.hotstart.dev'}/distribution/app/${platform}`,
+
+	/**
+	 * Check for updates (used by desktop app)
+	 * GET /distribution/updates/check?version=X.X.X&platform=macos
+	 */
+	checkForUpdates: (currentVersion: string, platform: string) =>
+		api.get<UpdateCheckResponse>(
+			`/distribution/updates/check?version=${encodeURIComponent(currentVersion)}&platform=${encodeURIComponent(platform)}`
+		),
+
+	/**
+	 * Get latest version info
+	 * GET /distribution/updates/latest
+	 */
+	getLatestVersion: () =>
+		api.get<LatestVersionResponse>('/distribution/updates/latest'),
+
+	/**
+	 * Get changelog/release notes
+	 * GET /distribution/updates/changelog
+	 */
+	getChangelog: (version?: string) =>
+		api.get<{ version: string; changelog: string; format: string }>(
+			version ? `/distribution/updates/changelog?version=${version}` : '/distribution/updates/changelog'
+		),
+};
