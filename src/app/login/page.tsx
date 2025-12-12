@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi, ApiError } from '@/lib/api';
@@ -41,7 +41,32 @@ function isValidRedirectUri(uri: string): boolean {
 	return ALLOWED_REDIRECT_PATTERNS.some(pattern => pattern.test(uri));
 }
 
-export default function LoginPage() {
+// Loading fallback for Suspense
+function LoginFormSkeleton() {
+	return (
+		<div className="gradient-bg min-h-screen flex items-center justify-center p-4">
+			<div className="w-full max-w-md">
+				<div className="text-center mb-8">
+					<h1 className="text-3xl font-bold tracking-tight">
+						<span className="text-primary">Hot</span>
+						<span className="text-foreground">start</span>
+					</h1>
+					<p className="text-muted mt-2 text-sm">Loading...</p>
+				</div>
+				<div className="glass-card rounded-2xl p-8 animate-pulse">
+					<div className="space-y-5">
+						<div className="h-12 bg-secondary/50 rounded-lg" />
+						<div className="h-12 bg-secondary/50 rounded-lg" />
+						<div className="h-12 bg-primary/20 rounded-lg" />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// Main login form component that uses useSearchParams
+function LoginForm() {
 	const searchParams = useSearchParams();
 	
 	// Parse query parameters
@@ -270,3 +295,11 @@ export default function LoginPage() {
 	);
 }
 
+// Page component with Suspense boundary for useSearchParams
+export default function LoginPage() {
+	return (
+		<Suspense fallback={<LoginFormSkeleton />}>
+			<LoginForm />
+		</Suspense>
+	);
+}
