@@ -10,17 +10,17 @@ const PLATFORMS = {
 		icon: 'apple',
 		downloadUrl: '/distribution/app/macos',
 	},
-	'macos-arm': {
-		id: 'macos-arm',
-		name: 'macOS (Apple Silicon)',
-		icon: 'apple',
-		downloadUrl: '/distribution/app/macos-arm',
-	},
 	windows: {
 		id: 'windows',
-		name: 'Windows',
+		name: 'Windows (x64)',
 		icon: 'windows',
 		downloadUrl: '/distribution/app/windows',
+	},
+	'windows-arm': {
+		id: 'windows-arm',
+		name: 'Windows (ARM)',
+		icon: 'windows',
+		downloadUrl: '/distribution/app/windows-arm',
 	},
 };
 
