@@ -2,25 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-interface User {
-	id: string;  // UUID
-	email: string;
-}
+import { getStoredUser, authApi, isAuthenticated, type AuthUser } from '@/lib/api';
 
 export default function DashboardPage() {
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<AuthUser | null>(null);
 
 	useEffect(() => {
-		// Get user data from localStorage (set during login)
-		const userData = localStorage.getItem('user');
-		if (userData) {
-			setUser(JSON.parse(userData));
+		// Check authentication and get user data
+		if (!isAuthenticated()) {
+			window.location.href = '/login';
+			return;
+		}
+		
+		const storedUser = getStoredUser();
+		if (storedUser) {
+			setUser(storedUser);
 		}
 	}, []);
 
-	const handleLogout = () => {
-		localStorage.removeItem('user');
+	const handleLogout = async () => {
+		await authApi.logout();
 		window.location.href = '/login';
 	};
 

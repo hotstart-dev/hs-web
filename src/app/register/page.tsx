@@ -46,12 +46,10 @@ export default function RegisterPage() {
 		setIsLoading(true);
 
 		try {
-			const response = await authApi.register(email, password);
+			await authApi.register(email, password);
 			setSuccess('Account created! Signing you in...');
 			
-			// Store user data in localStorage (auto-login)
-			localStorage.setItem('user', JSON.stringify(response.user));
-			
+			// Token and user data are automatically stored by authApi.register()
 			// Redirect to dashboard
 			setTimeout(() => {
 				window.location.href = '/dashboard';

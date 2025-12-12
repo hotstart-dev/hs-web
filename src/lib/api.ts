@@ -4,11 +4,16 @@
  * ALL backend requests go through the centralized gateway at:
  * https://api.hotstart.dev
  * 
+ * Authentication:
+ * - JWT tokens are stored in localStorage
+ * - Authorization header is automatically included for all requests
+ * - Public routes (auth, blueprints) work without authentication
+ * 
  * The gateway routes requests to individual services:
- * - /auth/*      → Auth service (login, register, session management)
- * - /blueprint/* → Blueprint service (project templates)
- * - /ui/*        → UI service
- * - /billing/*   → Billing service
+ * - /auth/*       → Auth service (login, register, session management)
+ * - /blueprints/* → Blueprint service (project templates) - TEMPORARILY PUBLIC
+ * - /billing/*    → Billing service (protected)
+ * - /user/*       → User service (protected)
  */
 
 // Gateway URL - the ONLY backend entrypoint
@@ -34,6 +39,66 @@ function getGatewayUrl(): string {
 
 const API_BASE_URL = getGatewayUrl();
 
+// ============================================
+// TOKEN MANAGEMENT
+// ============================================
+
+const TOKEN_KEY = 'hotstart_token';
+const USER_KEY = 'hotstart_user';
+
+/**
+ * Get the stored JWT token
+ */
+export function getToken(): string | null {
+	if (typeof window === 'undefined') return null;
+	return localStorage.getItem(TOKEN_KEY);
+}
+
+/**
+ * Store JWT token
+ */
+export function setToken(token: string): void {
+	if (typeof window === 'undefined') return;
+	localStorage.setItem(TOKEN_KEY, token);
+}
+
+/**
+ * Remove stored token
+ */
+export function clearToken(): void {
+	if (typeof window === 'undefined') return;
+	localStorage.removeItem(TOKEN_KEY);
+	localStorage.removeItem(USER_KEY);
+}
+
+/**
+ * Get stored user data
+ */
+export function getStoredUser(): AuthUser | null {
+	if (typeof window === 'undefined') return null;
+	const data = localStorage.getItem(USER_KEY);
+	return data ? JSON.parse(data) : null;
+}
+
+/**
+ * Store user data
+ */
+export function setStoredUser(user: AuthUser): void {
+	if (typeof window === 'undefined') return;
+	localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+/**
+ * Check if user is authenticated
+ */
+export function isAuthenticated(): boolean {
+	return !!getToken();
+}
+
+// ============================================
+// API CLIENT
+// ============================================
+
 /**
  * Custom error class for API errors
  */
@@ -56,30 +121,39 @@ interface RequestOptions {
 	body?: unknown;
 	headers?: Record<string, string>;
 	credentials?: RequestCredentials;
+	skipAuth?: boolean; // Skip adding Authorization header
 }
 
 /**
  * Makes an API request through the gateway
- * @param endpoint - API endpoint path (e.g., '/auth/login')
- * @param options - Request options
- * @returns Parsed JSON response
- * @throws ApiError on non-2xx responses
+ * Automatically includes JWT token in Authorization header
  */
 export async function apiRequest<T>(
 	endpoint: string,
 	options: RequestOptions = {}
 ): Promise<T> {
-	const { method = 'GET', body, headers = {}, credentials = 'include' } = options;
+	const { method = 'GET', body, headers = {}, credentials = 'include', skipAuth = false } = options;
 
 	const url = `${API_BASE_URL}${endpoint}`;
 
+	// Build headers with auth token
+	const requestHeaders: Record<string, string> = {
+		'Content-Type': 'application/json',
+		...headers,
+	};
+
+	// Add Authorization header if token exists and not skipped
+	if (!skipAuth) {
+		const token = getToken();
+		if (token) {
+			requestHeaders['Authorization'] = `Bearer ${token}`;
+		}
+	}
+
 	const config: RequestInit = {
 		method,
-		credentials, // Include credentials for cookie-based auth
-		headers: {
-			'Content-Type': 'application/json',
-			...headers,
-		},
+		credentials,
+		headers: requestHeaders,
 	};
 
 	if (body && method !== 'GET') {
@@ -91,6 +165,11 @@ export async function apiRequest<T>(
 	// Handle empty responses
 	const text = await response.text();
 	const data = text ? JSON.parse(text) as Record<string, unknown> : {};
+
+	// Handle 401 - clear token and potentially redirect
+	if (response.status === 401) {
+		clearToken();
+	}
 
 	if (!response.ok) {
 		throw new ApiError(response.status, response.statusText, data);
@@ -132,6 +211,7 @@ export interface AuthResponse {
 	success: boolean;
 	message: string;
 	user: AuthUser;
+	token?: string; // JWT token returned on login/register
 }
 
 export interface AuthError {
@@ -145,36 +225,53 @@ export interface AuthError {
 export const authApi = {
 	/**
 	 * Register a new user
-	 * POST /auth/register
+	 * Stores token and user data on success
 	 */
-	register: (email: string, password: string) =>
-		api.post<AuthResponse>('/auth/register', { email, password }),
+	register: async (email: string, password: string): Promise<AuthResponse> => {
+		const response = await api.post<AuthResponse>('/auth/register', { email, password });
+		if (response.token) {
+			setToken(response.token);
+			setStoredUser(response.user);
+		}
+		return response;
+	},
 
 	/**
 	 * Login with email and password
-	 * POST /auth/login
+	 * Stores token and user data on success
 	 */
-	login: (email: string, password: string) =>
-		api.post<AuthResponse>('/auth/login', { email, password }),
+	login: async (email: string, password: string): Promise<AuthResponse> => {
+		const response = await api.post<AuthResponse>('/auth/login', { email, password });
+		if (response.token) {
+			setToken(response.token);
+			setStoredUser(response.user);
+		}
+		return response;
+	},
 
 	/**
 	 * Get current authenticated user
-	 * GET /auth/me
 	 */
-	me: () =>
-		api.get<AuthResponse>('/auth/me'),
+	me: () => api.get<AuthResponse>('/auth/me'),
 
 	/**
 	 * Logout current user
-	 * POST /auth/logout
+	 * Clears stored token and user data
 	 */
-	logout: () =>
-		api.post<{ success: boolean }>('/auth/logout', {}),
+	logout: async (): Promise<{ success: boolean }> => {
+		try {
+			const response = await api.post<{ success: boolean }>('/auth/logout', {});
+			return response;
+		} finally {
+			clearToken();
+		}
+	},
 };
 
 // ============================================
-// BLUEPRINT SERVICE - /blueprint/*
+// BLUEPRINT SERVICE - /blueprints/*
 // ============================================
+// NOTE: Blueprint routes are TEMPORARILY public until app login exists
 
 export interface Blueprint {
 	id: string;
@@ -197,43 +294,36 @@ export interface BlueprintResponse {
 
 /**
  * Blueprint Service API
- * All routes proxied through gateway: /blueprint/*
+ * All routes proxied through gateway: /blueprints/*
+ * NOTE: Currently public - will require auth once login is implemented
  */
 export const blueprintApi = {
 	/**
 	 * Create a new blueprint
-	 * POST /blueprint/create
 	 */
 	create: (data: { name: string; description?: string; config: Record<string, unknown> }) =>
-		api.post<BlueprintResponse>('/blueprint/create', data),
+		api.post<BlueprintResponse>('/blueprints/create', data),
 
 	/**
 	 * List all blueprints
-	 * GET /blueprint/list
 	 */
-	list: () =>
-		api.get<BlueprintListResponse>('/blueprint/list'),
+	list: () => api.get<BlueprintListResponse>('/blueprints/list'),
 
 	/**
 	 * Get a specific blueprint by ID
-	 * GET /blueprint/:id
 	 */
-	get: (id: string) =>
-		api.get<BlueprintResponse>(`/blueprint/${id}`),
+	get: (id: string) => api.get<BlueprintResponse>(`/blueprints/${id}`),
 
 	/**
 	 * Update a blueprint
-	 * PUT /blueprint/:id
 	 */
 	update: (id: string, data: Partial<Blueprint>) =>
-		api.put<BlueprintResponse>(`/blueprint/${id}`, data),
+		api.put<BlueprintResponse>(`/blueprints/${id}`, data),
 
 	/**
 	 * Delete a blueprint
-	 * DELETE /blueprint/:id
 	 */
-	delete: (id: string) =>
-		api.delete<{ success: boolean }>(`/blueprint/${id}`),
+	delete: (id: string) => api.delete<{ success: boolean }>(`/blueprints/${id}`),
 };
 
 // ============================================
@@ -241,21 +331,13 @@ export const blueprintApi = {
 // ============================================
 
 /**
- * UI Service API
+ * UI Service API (Protected)
  * All routes proxied through gateway: /ui/*
  */
 export const uiApi = {
-	/**
-	 * Get UI configuration
-	 * GET /ui/config
-	 */
 	getConfig: () =>
 		api.get<{ success: boolean; config: Record<string, unknown> }>('/ui/config'),
 
-	/**
-	 * Get theme settings
-	 * GET /ui/theme
-	 */
 	getTheme: () =>
 		api.get<{ success: boolean; theme: Record<string, unknown> }>('/ui/theme'),
 };
@@ -279,35 +361,19 @@ export interface Subscription {
 }
 
 /**
- * Billing Service API
+ * Billing Service API (Protected)
  * All routes proxied through gateway: /billing/*
  */
 export const billingApi = {
-	/**
-	 * Get available plans
-	 * GET /billing/plans
-	 */
 	getPlans: () =>
 		api.get<{ success: boolean; plans: BillingPlan[] }>('/billing/plans'),
 
-	/**
-	 * Get current subscription
-	 * GET /billing/subscription
-	 */
 	getSubscription: () =>
 		api.get<{ success: boolean; subscription: Subscription | null }>('/billing/subscription'),
 
-	/**
-	 * Create checkout session
-	 * POST /billing/checkout
-	 */
 	createCheckout: (planId: string) =>
 		api.post<{ success: boolean; checkoutUrl: string }>('/billing/checkout', { planId }),
 
-	/**
-	 * Cancel subscription
-	 * POST /billing/cancel
-	 */
 	cancelSubscription: () =>
 		api.post<{ success: boolean }>('/billing/cancel', {}),
 };
