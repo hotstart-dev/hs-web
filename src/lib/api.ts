@@ -219,6 +219,14 @@ export interface AuthError {
 }
 
 /**
+ * Response for app login (returns auth code, not JWT)
+ */
+export interface AppLoginResponse {
+	success: boolean;
+	code: string; // Short-lived auth code for exchange
+}
+
+/**
  * Auth Service API
  * All routes proxied through gateway: /auth/*
  */
@@ -237,7 +245,7 @@ export const authApi = {
 	},
 
 	/**
-	 * Login with email and password
+	 * Login with email and password (Web flow)
 	 * Stores token and user data on success
 	 */
 	login: async (email: string, password: string): Promise<AuthResponse> => {
@@ -246,6 +254,26 @@ export const authApi = {
 			setToken(response.token);
 			setStoredUser(response.user);
 		}
+		return response;
+	},
+
+	/**
+	 * Login for desktop app (App flow)
+	 * Returns a short-lived auth code instead of JWT
+	 * App must exchange code for JWT via POST /auth/token
+	 * 
+	 * This is part of the OAuth-style authorization code flow:
+	 * 1. App opens browser to login page
+	 * 2. User authenticates
+	 * 3. Browser redirects to app with auth code
+	 * 4. App exchanges code for JWT
+	 */
+	loginForApp: async (email: string, password: string): Promise<AppLoginResponse> => {
+		const response = await api.post<AppLoginResponse>('/auth/login', { 
+			email, 
+			password,
+			client: 'app' // Tells auth service to return auth code, not JWT
+		});
 		return response;
 	},
 

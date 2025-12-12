@@ -1,15 +1,67 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi, ApiError } from '@/lib/api';
 
+// ============================================
+// SHARED LOGIN PAGE - Web + Desktop App
+// ============================================
+// This page handles login for both:
+// - Web users: Normal browser session, redirect to dashboard
+// - App users: Generate auth code, redirect to deep link
+//
+// Query Parameters:
+// - client: 'web' | 'app' (defaults to 'web')
+// - redirect_uri: Where to redirect after login
+//
+// App Flow:
+// 1. App opens: hotstart.dev/login?client=app&redirect_uri=hotstart://auth/callback
+// 2. User enters credentials
+// 3. On success, generates auth code via API
+// 4. Redirects to: hotstart://auth/callback?code=AUTH_CODE
+//
+// Web Flow:
+// 1. User visits: hotstart.dev/login or hotstart.dev/login?client=web&redirect_uri=/app
+// 2. User enters credentials  
+// 3. On success, stores JWT in localStorage
+// 4. Redirects to: /dashboard or specified redirect_uri
+// ============================================
+
+// Allowed redirect URIs for security
+const ALLOWED_REDIRECT_PATTERNS = [
+	/^hotstart:\/\/auth\/callback$/,  // Desktop app deep link
+	/^https:\/\/hotstart\.dev(\/.*)?$/, // Production web
+	/^https:\/\/www\.hotstart\.dev(\/.*)?$/, // Production web with www
+	/^\/[\w/-]*$/, // Relative paths (e.g., /dashboard, /app)
+];
+
+function isValidRedirectUri(uri: string): boolean {
+	return ALLOWED_REDIRECT_PATTERNS.some(pattern => pattern.test(uri));
+}
+
 export default function LoginPage() {
+	const searchParams = useSearchParams();
+	
+	// Parse query parameters
+	const client = searchParams.get('client') || 'web';
+	const redirectUri = searchParams.get('redirect_uri') || '/dashboard';
+	const isAppLogin = client === 'app';
+	
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [redirectError, setRedirectError] = useState('');
+
+	// Validate redirect_uri on mount
+	useEffect(() => {
+		if (!isValidRedirectUri(redirectUri)) {
+			setRedirectError('Invalid redirect destination');
+		}
+	}, [redirectUri]);
 
 	const validateForm = (): string | null => {
 		if (!email.trim()) {
@@ -26,6 +78,12 @@ export default function LoginPage() {
 		setError('');
 		setSuccess('');
 
+		// Block submission if redirect_uri is invalid
+		if (redirectError) {
+			setError('Invalid redirect destination. Please close this page and try again.');
+			return;
+		}
+
 		const validationError = validateForm();
 		if (validationError) {
 			setError(validationError);
@@ -35,14 +93,42 @@ export default function LoginPage() {
 		setIsLoading(true);
 
 		try {
-			const response = await authApi.login(email, password);
-			setSuccess(response.message);
-			
-			// Token and user data are automatically stored by authApi.login()
-			// Redirect to dashboard after a brief delay
-			setTimeout(() => {
-				window.location.href = '/dashboard';
-			}, 1000);
+			if (isAppLogin) {
+				// ============================================
+				// APP LOGIN FLOW
+				// ============================================
+				// 1. Authenticate and get auth code (not JWT)
+				// 2. Redirect to app deep link with code
+				// 3. App exchanges code for JWT via POST /auth/token
+				// ============================================
+				const response = await authApi.loginForApp(email, password);
+				
+				if (response.code) {
+					setSuccess('Authentication successful! Redirecting to app...');
+					// Redirect to app with auth code
+					setTimeout(() => {
+						window.location.href = `${redirectUri}?code=${encodeURIComponent(response.code)}`;
+					}, 500);
+				} else {
+					throw new Error('No auth code received');
+				}
+			} else {
+				// ============================================
+				// WEB LOGIN FLOW
+				// ============================================
+				// 1. Authenticate and get JWT
+				// 2. Store JWT in localStorage
+				// 3. Redirect to web destination
+				// ============================================
+				const response = await authApi.login(email, password);
+				setSuccess(response.message);
+				
+				// Token and user data are automatically stored by authApi.login()
+				// Redirect after a brief delay
+				setTimeout(() => {
+					window.location.href = redirectUri;
+				}, 1000);
+			}
 		} catch (err) {
 			if (err instanceof ApiError) {
 				setError(err.message);
@@ -71,7 +157,9 @@ export default function LoginPage() {
 							<span className="text-foreground">start</span>
 						</h1>
 					</Link>
-					<p className="text-muted mt-2 text-sm">Welcome back</p>
+					<p className="text-muted mt-2 text-sm">
+						{isAppLogin ? 'Sign in to continue to the app' : 'Welcome back'}
+					</p>
 				</div>
 
 				{/* Card */}
