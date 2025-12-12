@@ -129,7 +129,7 @@ function LoginForm() {
 				const response = await authApi.loginForApp(email, password);
 				
 				if (response.code) {
-					setSuccess('Authentication successful! Redirecting to app...');
+					setSuccess('Authentication successful!');
 					// Redirect to app with auth code
 					setTimeout(() => {
 						window.location.href = `${redirectUri}?code=${encodeURIComponent(response.code)}`;
@@ -201,7 +201,6 @@ function LoginForm() {
 						{success && (
 							<div className="alert-success rounded-lg px-4 py-3 text-sm">
 								{success}
-								<span className="ml-2 opacity-75">Redirecting...</span>
 							</div>
 						)}
 

@@ -99,9 +99,6 @@ export default function RegisterPage() {
 						{success && (
 							<div className="alert-success rounded-lg px-4 py-3 text-sm">
 								{success}
-								<Link href="/login" className="link ml-2 font-medium">
-									Sign in →
-								</Link>
 							</div>
 						)}
 
