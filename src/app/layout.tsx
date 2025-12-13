@@ -17,6 +17,9 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
 	title: "Hotstart",
 	description: "Get started quickly with Hotstart",
+	icons: {
+		icon: "/logo.png",
+	},
 };
 
 export default function RootLayout({

@@ -117,9 +117,9 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 
 	if (isLoading) {
 		return (
-			<div className={`btn-primary text-base px-8 py-3.5 rounded-xl opacity-50 ${className}`}>
+			<div className={`text-base px-8 py-4 rounded-full bg-gradient-to-r from-violet-500/50 to-purple-500/50 text-white/50 font-semibold ${className}`}>
 				<span className="flex items-center gap-2">
-					<DownloadIcon className="w-5 h-5" />
+					<DownloadIcon className="w-5 h-5 animate-pulse" />
 					Loading...
 				</span>
 			</div>
@@ -132,7 +132,7 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 				{/* Main download button */}
 				<a
 					href={downloadUrl}
-					className={`btn-primary text-base pl-6 pr-4 py-3.5 rounded-l-xl flex items-center gap-3 ${className}`}
+					className={`text-base pl-6 pr-4 py-4 rounded-l-full flex items-center gap-3 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-violet-500/25 ${className}`}
 				>
 					<PlatformIcon platform={currentPlatform.icon} className="w-5 h-5" />
 					<span>Download for {currentPlatform.name}</span>
@@ -142,7 +142,7 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 				{showOtherPlatforms && (
 					<button
 						onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-						className="btn-primary px-3 py-3.5 rounded-r-xl border-l border-white/20 hover:bg-primary-hover"
+						className="px-4 py-4 rounded-r-full border-l border-white/20 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white transition-all duration-300"
 						aria-label="Other platforms"
 					>
 						<ChevronDownIcon className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -160,20 +160,20 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 					/>
 
 					{/* Dropdown */}
-					<div className="absolute right-0 mt-2 w-64 rounded-xl bg-secondary border border-border shadow-xl z-20 overflow-hidden">
+					<div className="absolute right-0 mt-2 w-64 rounded-2xl bg-black/90 backdrop-blur-xl border border-violet-300/20 shadow-xl shadow-violet-500/10 z-20 overflow-hidden">
 						<div className="py-1">
-							<div className="px-4 py-2 text-xs text-muted uppercase tracking-wider">
+							<div className="px-4 py-2 text-xs text-violet-200/60 uppercase tracking-wider">
 								Other platforms
 							</div>
 							{otherPlatforms.map((p) => (
 								<a
 									key={p.id}
 									href={`${API_BASE}${p.downloadUrl}`}
-									className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+									className="flex items-center gap-3 px-4 py-3 hover:bg-violet-500/10 transition-colors"
 									onClick={() => setIsDropdownOpen(false)}
 								>
-									<PlatformIcon platform={p.icon} className="w-5 h-5 text-muted" />
-									<span className="text-foreground">{p.name}</span>
+									<PlatformIcon platform={p.icon} className="w-5 h-5 text-violet-300/70" />
+									<span className="text-violet-100">{p.name}</span>
 								</a>
 							))}
 						</div>
