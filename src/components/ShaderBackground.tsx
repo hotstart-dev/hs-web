@@ -295,7 +295,7 @@ class PointerHandler {
 
 export function ShaderBackground() {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const animationFrameRef = useRef<number>();
+	const animationFrameRef = useRef<number | undefined>(undefined);
 	const rendererRef = useRef<WebGLRenderer | null>(null);
 	const pointersRef = useRef<PointerHandler | null>(null);
 
