@@ -196,17 +196,9 @@ function LoginForm() {
 						<h2 className="text-xl font-semibold text-foreground mb-2">
 							Authentication Successful
 						</h2>
-						<p className="text-muted text-sm mb-6">
+						<p className="text-muted text-sm">
 							Redirecting you back to the app...
 						</p>
-						
-						{/* Loading spinner */}
-						<div className="flex justify-center">
-							<svg className="spinner w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none">
-								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-							</svg>
-						</div>
 					</div>
 
 					{/* Security note */}
