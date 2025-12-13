@@ -194,7 +194,7 @@ function LoginForm() {
 						</div>
 						
 						<h2 className="text-xl font-semibold text-foreground mb-2">
-							Authentication Successful
+							All Your Favorite Frameworks
 						</h2>
 						<p className="text-muted text-sm">
 							Redirecting you back to the app...
