@@ -165,6 +165,62 @@ function LoginForm() {
 		}
 	};
 
+	// Show success screen for app login redirect
+	if (success && isAppLogin) {
+		return (
+			<div className="gradient-bg min-h-screen flex items-center justify-center p-4">
+				{/* Decorative elements */}
+				<div className="fixed inset-0 overflow-hidden pointer-events-none">
+					<div className="absolute top-1/3 right-1/4 w-72 h-72 bg-accent/10 rounded-full blur-3xl float" />
+					<div className="absolute bottom-1/3 left-1/4 w-80 h-80 bg-primary/8 rounded-full blur-3xl float" style={{ animationDelay: '-2s' }} />
+				</div>
+
+				<div className="w-full max-w-md relative z-10">
+					{/* Logo/Brand */}
+					<div className="text-center mb-8">
+						<h1 className="text-3xl font-bold tracking-tight">
+							<span className="text-primary">Hot</span>
+							<span className="text-foreground">start</span>
+						</h1>
+					</div>
+
+					{/* Success Card */}
+					<div className="glass-card rounded-2xl p-8 text-center">
+						{/* Success Icon */}
+						<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+							<svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+							</svg>
+						</div>
+						
+						<h2 className="text-xl font-semibold text-foreground mb-2">
+							Authentication Successful
+						</h2>
+						<p className="text-muted text-sm mb-6">
+							Redirecting you back to the app...
+						</p>
+						
+						{/* Loading spinner */}
+						<div className="flex justify-center">
+							<svg className="spinner w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none">
+								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							</svg>
+						</div>
+					</div>
+
+					{/* Security note */}
+					<div className="flex items-center justify-center gap-2 mt-8 text-xs text-muted">
+						<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+						</svg>
+						<span>You can close this window</span>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="gradient-bg min-h-screen flex items-center justify-center p-4">
 			{/* Decorative elements */}
