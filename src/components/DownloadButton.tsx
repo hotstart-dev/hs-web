@@ -160,20 +160,22 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 					/>
 
 					{/* Dropdown */}
-					<div className="absolute right-0 mt-2 w-64 rounded-2xl bg-black/90 backdrop-blur-xl border border-violet-300/20 shadow-xl shadow-violet-500/10 z-20 overflow-hidden">
-						<div className="py-1">
-							<div className="px-4 py-2 text-xs text-violet-200/60 uppercase tracking-wider">
+					<div className="absolute right-0 mt-3 w-72 rounded-xl bg-black/95 backdrop-blur-2xl border border-violet-400/30 shadow-2xl shadow-violet-500/20 z-20 overflow-hidden animate-fade-in-down">
+						<div className="py-2">
+							<div className="px-4 py-2.5 text-xs font-semibold text-violet-300/80 uppercase tracking-wider border-b border-violet-400/10">
 								Other platforms
 							</div>
-							{otherPlatforms.map((p) => (
+							{otherPlatforms.map((p, index) => (
 								<a
 									key={p.id}
 									href={`${API_BASE}${p.downloadUrl}`}
-									className="flex items-center gap-3 px-4 py-3 hover:bg-violet-500/10 transition-colors"
+									className="flex items-center gap-3 px-4 py-3.5 hover:bg-gradient-to-r hover:from-violet-500/20 hover:to-purple-500/20 transition-all duration-200 group"
 									onClick={() => setIsDropdownOpen(false)}
 								>
-									<PlatformIcon platform={p.icon} className="w-5 h-5 text-violet-300/70" />
-									<span className="text-violet-100">{p.name}</span>
+									<div className="flex items-center justify-center w-8 h-8 rounded-lg bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors">
+										<PlatformIcon platform={p.icon} className="w-4 h-4 text-violet-300 group-hover:text-violet-200 transition-colors" />
+									</div>
+									<span className="text-violet-100 group-hover:text-white font-medium transition-colors">{p.name}</span>
 								</a>
 							))}
 						</div>
