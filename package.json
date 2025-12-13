@@ -29,6 +29,11 @@
 		"typescript": "5.9.3",
 		"wrangler": "4.51.0"
 	},
+	"overrides": {
+		"formdata-node": {
+			"node-domexception": "^2.0.1"
+		}
+	},
 	"private": true,
 	"scripts": {
 		"build": "next build",
