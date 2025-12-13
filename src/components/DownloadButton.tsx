@@ -160,7 +160,7 @@ export function DownloadButton({ className = '', showOtherPlatforms = true }: Do
 					/>
 
 					{/* Dropdown */}
-					<div className="absolute right-0 mt-3 w-72 rounded-xl bg-black/95 backdrop-blur-2xl border border-violet-400/30 shadow-2xl shadow-violet-500/20 z-20 overflow-hidden animate-fade-in-down">
+					<div className="absolute right-0 mt-3 w-72 rounded-xl bg-black border border-violet-400/30 shadow-2xl shadow-violet-500/20 z-20 overflow-hidden animate-fade-in-down">
 						<div className="py-2">
 							<div className="px-4 py-2.5 text-xs font-semibold text-violet-300/80 uppercase tracking-wider border-b border-violet-400/10">
 								Other platforms
